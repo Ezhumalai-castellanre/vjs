@@ -1,0 +1,61 @@
+╔═══════════════════════════════════════════════════════════════╗
+║         MONGODB ATLAS SETUP - QUICK CHECKLIST                 ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📋 FOLLOW THESE STEPS:
+
+□ STEP 1: CREATE ACCOUNT (2 min)
+  → Go to: https://www.mongodb.com/cloud/atlas/register
+  → Sign up with Google/GitHub/Email (FREE)
+  → No credit card needed!
+
+□ STEP 2: CREATE CLUSTER (2 min)
+  → Click "Build a Database"
+  → Choose "Shared" (M0 FREE)
+  → Select closest region
+  → Click "Create Cluster"
+  → Wait 3-5 minutes
+
+□ STEP 3: CREATE USER (1 min)
+  → Username: vjkadmin
+  → Click "Autogenerate Secure Password"
+  → 💾 SAVE PASSWORD!
+  
+  Your credentials:
+  Username: ________________
+  Password: ________________
+
+□ STEP 4: NETWORK ACCESS (1 min)
+  → Add IP Address: 0.0.0.0/0
+  → Description: "Allow from anywhere"
+  → Click "Add Entry"
+
+□ STEP 5: GET CONNECTION STRING (1 min)
+  → Click "Connect" button
+  → Choose "Drivers"
+  → Copy connection string
+  → Replace <password> with your actual password
+  
+  Your connection string:
+  mongodb+srv://vjkadmin:YOUR_PASSWORD@cluster0.xxxxx.mongodb.net/...
+
+□ STEP 6: TEST LOCALLY (Optional)
+  → Update server/.env with connection string
+  → Set USE_FILE_DB=false
+  → Restart server: cd server && npm start
+  → Should see: "✅ Connected to MongoDB"
+
+□ STEP 7: VERIFY DATA
+  → Go to Atlas dashboard
+  → Click "Browse Collections"
+  → See your bookings!
+
+╔═══════════════════════════════════════════════════════════════╗
+║                     READY FOR DEPLOYMENT!                     ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📝 SAVE FOR DEPLOYMENT:
+   Connection String: _______________________________________
+   Database Name: vjk_mahal
+   
+🎯 NEXT: Deploy to Railway/Render (see QUICK_DEPLOY.md)
