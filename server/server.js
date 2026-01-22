@@ -11,10 +11,37 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const USE_FILE_DB = process.env.USE_FILE_DB !== 'false'; // Default to file DB
 const USE_MONGODB = process.env.MONGODB_URI && process.env.MONGODB_URI.includes('mongodb');
 
+// CORS Configuration - Allow multiple origins
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173', // Vite default dev port
+  'https://vjs-gamma.vercel.app',
+  FRONTEND_URL
+].filter(Boolean); // Remove any undefined values
+
 // Middleware
 app.use(cors({
-  origin: FRONTEND_URL,
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      // In development, be more permissive
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`⚠️  Allowing origin in dev: ${origin}`);
+        callback(null, true);
+      } else {
+        console.log(`❌ Blocked origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
@@ -112,6 +139,7 @@ async function startServer() {
       console.log(`📍 Health Check: http://localhost:${PORT}/health`);
       console.log(`📍 API Endpoint: http://localhost:${PORT}/api/bookings`);
       console.log(`🌐 Frontend URL: ${FRONTEND_URL}`);
+      console.log(`🌐 Allowed Origins: ${allowedOrigins.join(', ')}`);
       console.log(`💾 Database: File-based (JSON)`);
       console.log('=================================');
       console.log('ℹ️  Using temporary file database');

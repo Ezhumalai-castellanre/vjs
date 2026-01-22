@@ -32,10 +32,69 @@ import {
 // --- MongoDB API Configuration ---
 // In production, VITE_API_URL must be set in Vercel environment variables
 // Example: https://your-backend.railway.app/api
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.PROD 
-    ? '' // Production without env var will show error
-    : 'http://localhost:5000/api'); // Development fallback
+const getApiUrl = () => {
+  const url = import.meta.env.VITE_API_URL;
+  const isProduction = import.meta.env.PROD || 
+    (typeof window !== 'undefined' && window.location.hostname !== 'localhost');
+  
+  // Log environment info for debugging
+  if (isProduction) {
+    console.log('🌐 Production mode detected');
+    console.log('📍 Current hostname:', typeof window !== 'undefined' ? window.location.hostname : 'unknown');
+  }
+  
+  // If no URL is provided
+  if (!url || url.trim() === '') {
+    if (isProduction) {
+      console.error('❌ VITE_API_URL is not set in production!');
+      console.error('❌ Go to Vercel Dashboard → Settings → Environment Variables');
+      console.error('❌ Add: VITE_API_URL = https://your-backend.railway.app/api');
+      return null; // Return null in production to show error screen
+    } else {
+      // Development fallback
+      console.log('🔧 Development mode: Using localhost:5000');
+      return 'http://localhost:5000/api';
+    }
+  }
+  
+  // Trim whitespace
+  const cleanUrl = url.trim();
+  
+  // Validate: must be absolute URL (starts with http:// or https://)
+  if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+    console.error('❌ VITE_API_URL must be an absolute URL (starting with http:// or https://)');
+    console.error('❌ Current value:', cleanUrl);
+    console.error('❌ This will cause requests to go to Vercel instead of Railway backend');
+    if (isProduction) {
+      return null; // Don't use invalid URL in production
+    }
+    return cleanUrl; // Allow in dev for testing
+  }
+  
+  // Block localhost in production
+  if (isProduction && (cleanUrl.includes('localhost') || cleanUrl.includes('127.0.0.1'))) {
+    console.error('❌ VITE_API_URL cannot use localhost in production!');
+    console.error('❌ Current value:', cleanUrl);
+    console.error('❌ Set it to your Railway backend URL: https://your-backend.railway.app/api');
+    return null;
+  }
+  
+  // Warn if pointing to Vercel domain (should point to Railway)
+  if (cleanUrl.includes('vercel.app') || cleanUrl.includes('vjs-gamma')) {
+    console.error('❌ VITE_API_URL is pointing to Vercel domain!');
+    console.error('❌ It should point to your Railway backend URL');
+    console.error('❌ Example: https://your-app.up.railway.app/api');
+    console.error('❌ Current value:', cleanUrl);
+    if (isProduction) {
+      return null; // Don't allow Vercel domain in production
+    }
+  }
+  
+  console.log('✅ API URL configured:', cleanUrl);
+  return cleanUrl;
+};
+
+const API_URL = getApiUrl();
 
 const ADMIN_PIN = "1234";
 const MAX_EVENTS = 2; 
@@ -64,6 +123,16 @@ export default function App() {
       console.log('📅 Loaded bookings from MongoDB:', Object.keys(data).length, 'dates');
     } catch (error) {
       console.error("❌ Database Error:", error);
+      
+      // Check if we got HTML instead of JSON (common when API URL is wrong)
+      if (error.message && error.message.includes("Unexpected token '<'")) {
+        console.error("❌ Received HTML instead of JSON. This usually means:");
+        console.error("   1. VITE_API_URL is pointing to Vercel instead of Railway");
+        console.error("   2. VITE_API_URL is set to a relative path like '/api'");
+        console.error("   3. Backend is not deployed or URL is incorrect");
+        console.error("   Current API_URL:", API_URL);
+      }
+      
       setLoading(false);
     }
   };
@@ -99,11 +168,18 @@ export default function App() {
       await fetchBookings();
     } catch (err) {
       console.error("❌ Save failed:", err);
+      
+      let errorMessage = "Failed to save booking.";
+      
       if (err.message.includes('Failed to fetch') || err.message.includes('ERR_CONNECTION_REFUSED')) {
-        alert("❌ Cannot connect to backend API.\n\nPlease ensure:\n1. Backend is deployed (Railway/Render)\n2. VITE_API_URL is set in Vercel environment variables\n3. Backend URL is correct and includes /api");
-      } else {
-        alert("Failed to save booking. Please check your MongoDB connection.");
+        errorMessage = "❌ Cannot connect to backend API.\n\nPlease ensure:\n1. Backend is deployed (Railway)\n2. VITE_API_URL is set in Vercel\n3. Backend URL is correct and includes /api";
+      } else if (err.message.includes('405') || err.message.includes('Method Not Allowed')) {
+        errorMessage = "❌ API endpoint error (405).\n\nThis usually means:\n1. VITE_API_URL is pointing to Vercel instead of Railway\n2. VITE_API_URL might be set to '/api' (relative path)\n\nFix: Set VITE_API_URL to your Railway URL:\nhttps://your-backend.railway.app/api";
+      } else if (err.message && err.message.includes("Unexpected token '<'")) {
+        errorMessage = "❌ Received HTML instead of JSON.\n\nVITE_API_URL is likely incorrect:\n- Should be: https://your-backend.railway.app/api\n- Not: /api or https://vjs-gamma.vercel.app/api\n\nCheck Vercel environment variables.";
       }
+      
+      alert(errorMessage);
     }
   };
 
@@ -146,9 +222,16 @@ export default function App() {
             </ol>
           </div>
           <div className="bg-amber-50 p-4 rounded-xl border-2 border-amber-200">
-            <p className="text-xs text-amber-800">
-              <strong>Note:</strong> Replace <code>your-backend.railway.app</code> with your actual Railway backend URL.
-              Make sure to include <code>/api</code> at the end.
+            <p className="text-xs text-amber-800 mb-2">
+              <strong>⚠️ Common Mistakes:</strong>
+            </p>
+            <ul className="text-xs text-amber-800 list-disc list-inside space-y-1">
+              <li>❌ Don't use: <code>/api</code> (relative path)</li>
+              <li>❌ Don't use: <code>https://vjs-gamma.vercel.app/api</code> (Vercel domain)</li>
+              <li>✅ Use: <code>https://your-app.up.railway.app/api</code> (Railway backend)</li>
+            </ul>
+            <p className="text-xs text-amber-800 mt-2">
+              <strong>Note:</strong> Replace with your actual Railway backend URL and include <code>/api</code> at the end.
             </p>
           </div>
         </div>
