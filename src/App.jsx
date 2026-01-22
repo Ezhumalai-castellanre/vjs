@@ -30,8 +30,9 @@ import {
 } from 'date-fns';
 
 // --- MongoDB API Configuration ---
-// In production, VITE_API_URL must be set in Vercel environment variables
-// Example: https://your-backend.railway.app/api
+// Production Railway backend URL (fallback if VITE_API_URL not set)
+const PRODUCTION_API_URL = 'https://vjs-production.up.railway.app/api';
+
 const getApiUrl = () => {
   const url = import.meta.env.VITE_API_URL;
   const isProduction = import.meta.env.PROD || 
@@ -46,10 +47,10 @@ const getApiUrl = () => {
   // If no URL is provided
   if (!url || url.trim() === '') {
     if (isProduction) {
-      console.error('❌ VITE_API_URL is not set in production!');
-      console.error('❌ Go to Vercel Dashboard → Settings → Environment Variables');
-      console.error('❌ Add: VITE_API_URL = https://your-backend.railway.app/api');
-      return null; // Return null in production to show error screen
+      // Use Railway backend as default in production
+      console.log('🔧 Using default Railway backend:', PRODUCTION_API_URL);
+      console.log('💡 Tip: Set VITE_API_URL in Vercel for custom backend URL');
+      return PRODUCTION_API_URL;
     } else {
       // Development fallback
       console.log('🔧 Development mode: Using localhost:5000');
