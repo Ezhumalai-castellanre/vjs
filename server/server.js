@@ -6,8 +6,15 @@ import { fileDB } from './fileDB.js';
 dotenv.config();
 
 const app = express();
+// Railway automatically assigns PORT - don't set it manually
 const PORT = process.env.PORT || 5000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+// Log configuration for debugging
+console.log('🔧 Server Configuration:');
+console.log(`   PORT: ${PORT} (${process.env.PORT ? 'from Railway' : 'default'})`);
+console.log(`   NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
+console.log(`   FRONTEND_URL: ${FRONTEND_URL}`);
 const USE_FILE_DB = process.env.USE_FILE_DB !== 'false'; // Default to file DB
 const USE_MONGODB = process.env.MONGODB_URI && process.env.MONGODB_URI.includes('mongodb');
 
