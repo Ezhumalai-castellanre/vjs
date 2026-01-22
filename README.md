@@ -20,13 +20,25 @@ A modern, responsive event booking system for VJK Mahal built with React, Fireba
 - 🔥 **Real-time Updates** - Powered by Firebase Firestore
 - ⚡ **Fast & Modern** - Built with Vite for optimal performance
 
-## Getting Started
+## 🚀 Quick Start - Deploy to Production
+
+**Your app is already deployed on Vercel!** But you need to configure the backend.
+
+### ⚡ Quick Setup (5 minutes)
+
+1. **Deploy Backend to Railway** → See [DEPLOYMENT_STEPS.md](./DEPLOYMENT_STEPS.md)
+2. **Set VITE_API_URL in Vercel** → See [SETUP_COMPLETE.md](./SETUP_COMPLETE.md)
+
+**Or follow the complete guide:** [SETUP_COMPLETE.md](./SETUP_COMPLETE.md)
+
+---
+
+## 💻 Local Development
 
 ### Prerequisites
 
 - Node.js (v18 or higher)
 - npm or yarn
-- Firebase project with Firestore enabled
 
 ### Installation
 
@@ -36,13 +48,65 @@ A modern, responsive event booking system for VJK Mahal built with React, Fireba
 cd /Users/ezhumalai/Public/vjs
 ```
 
-2. Install dependencies:
+2. Install frontend dependencies:
 
 ```bash
 npm install
 ```
 
-3. Configure Firebase:
+3. Install backend dependencies:
+
+```bash
+cd server
+npm install
+cd ..
+```
+
+4. Start backend server:
+
+```bash
+cd server
+npm start
+# Server runs on http://localhost:5000
+```
+
+5. Start frontend (in another terminal):
+
+```bash
+npm run dev
+# Frontend runs on http://localhost:5173
+```
+
+### Environment Variables
+
+**Frontend (.env):**
+```
+VITE_API_URL=http://localhost:5000/api
+```
+
+**Backend (server/.env):**
+```
+PORT=5000
+FRONTEND_URL=http://localhost:5173
+USE_FILE_DB=true
+NODE_ENV=development
+```
+
+---
+
+## 📚 Documentation
+
+- **Complete Setup Guide:** [SETUP_COMPLETE.md](./SETUP_COMPLETE.md)
+- **Quick Deployment:** [DEPLOYMENT_STEPS.md](./DEPLOYMENT_STEPS.md)
+- **Railway Setup:** [RAILWAY_DEPLOY_NOW.md](./RAILWAY_DEPLOY_NOW.md)
+- **Troubleshooting:** [QUICK_FIX_NOW.md](./QUICK_FIX_NOW.md)
+- **MongoDB Setup:** [MONGODB_ATLAS_SETUP_DETAILED.md](./MONGODB_ATLAS_SETUP_DETAILED.md)
+
+---
+
+## 🔥 Legacy: Firebase Setup (Optional)
+
+**Note:** The app now uses MongoDB/File-based storage. Firebase setup is optional.
 
 **See the complete Firebase setup guide:** [FIREBASE_SETUP.md](./FIREBASE_SETUP.md)
 
