@@ -30,7 +30,12 @@ import {
 } from 'date-fns';
 
 // --- MongoDB API Configuration ---
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// In production, VITE_API_URL must be set in Vercel environment variables
+// Example: https://your-backend.railway.app/api
+const API_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.PROD 
+    ? '' // Production without env var will show error
+    : 'http://localhost:5000/api'); // Development fallback
 
 const ADMIN_PIN = "1234";
 const MAX_EVENTS = 2; 
@@ -44,6 +49,12 @@ export default function App() {
 
   // Fetch all bookings from MongoDB API
   const fetchBookings = async () => {
+    if (!API_URL) {
+      console.error("❌ API_URL not configured. Please set VITE_API_URL in Vercel environment variables.");
+      setLoading(false);
+      return;
+    }
+    
     try {
       const response = await fetch(`${API_URL}/bookings`);
       if (!response.ok) throw new Error('Failed to fetch bookings');
@@ -65,6 +76,11 @@ export default function App() {
   }, []);
 
   const handleSaveEvent = async (dateStr, updatedEvents) => {
+    if (!API_URL) {
+      alert("❌ API not configured. Please set VITE_API_URL environment variable in Vercel.\n\nGo to: Vercel Dashboard → Your Project → Settings → Environment Variables\nAdd: VITE_API_URL = https://your-backend.railway.app/api");
+      return;
+    }
+    
     try {
       const response = await fetch(`${API_URL}/bookings/${dateStr}`, {
         method: 'POST',
@@ -83,7 +99,11 @@ export default function App() {
       await fetchBookings();
     } catch (err) {
       console.error("❌ Save failed:", err);
-      alert("Failed to save booking. Please check your MongoDB connection.");
+      if (err.message.includes('Failed to fetch') || err.message.includes('ERR_CONNECTION_REFUSED')) {
+        alert("❌ Cannot connect to backend API.\n\nPlease ensure:\n1. Backend is deployed (Railway/Render)\n2. VITE_API_URL is set in Vercel environment variables\n3. Backend URL is correct and includes /api");
+      } else {
+        alert("Failed to save booking. Please check your MongoDB connection.");
+      }
     }
   };
 
@@ -93,6 +113,44 @@ export default function App() {
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-[#800000] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-[#800000] font-bold text-xs uppercase tracking-widest">Opening VJK Mahal...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if API_URL is not configured in production
+  if (!API_URL && import.meta.env.PROD) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[#FCF9F2] p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-2xl border-4 border-[#D4AF37]">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-[#800000] rounded-full flex items-center justify-center mx-auto mb-4">
+              <XCircle className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-serif font-bold text-[#800000] mb-2">Configuration Error</h2>
+            <p className="text-slate-600 mb-6">API endpoint is not configured for production.</p>
+          </div>
+          <div className="bg-slate-50 p-6 rounded-xl mb-6">
+            <h3 className="font-bold text-[#800000] mb-3 uppercase text-sm tracking-wider">How to Fix:</h3>
+            <ol className="list-decimal list-inside space-y-2 text-sm text-slate-700">
+              <li>Go to <a href="https://vercel.com/dashboard" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Vercel Dashboard</a></li>
+              <li>Select your project: <code className="bg-slate-200 px-2 py-1 rounded">vjs</code></li>
+              <li>Go to <strong>Settings</strong> → <strong>Environment Variables</strong></li>
+              <li>Add new variable:
+                <div className="bg-white p-3 rounded mt-2 font-mono text-xs">
+                  <div><strong>Name:</strong> VITE_API_URL</div>
+                  <div><strong>Value:</strong> https://your-backend.railway.app/api</div>
+                </div>
+              </li>
+              <li>Click <strong>Redeploy</strong> in the Deployments tab</li>
+            </ol>
+          </div>
+          <div className="bg-amber-50 p-4 rounded-xl border-2 border-amber-200">
+            <p className="text-xs text-amber-800">
+              <strong>Note:</strong> Replace <code>your-backend.railway.app</code> with your actual Railway backend URL.
+              Make sure to include <code>/api</code> at the end.
+            </p>
+          </div>
         </div>
       </div>
     );
