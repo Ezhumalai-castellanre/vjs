@@ -29,8 +29,12 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      // In development, be more permissive
-      if (process.env.NODE_ENV !== 'production') {
+      // In production, allow Vercel domains
+      if (process.env.NODE_ENV === 'production' && origin.includes('vercel.app')) {
+        console.log(`✅ Allowing Vercel origin: ${origin}`);
+        callback(null, true);
+      } else if (process.env.NODE_ENV !== 'production') {
+        // In development, be more permissive
         console.log(`⚠️  Allowing origin in dev: ${origin}`);
         callback(null, true);
       } else {
@@ -44,6 +48,20 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'VJK Mahal API Server',
+    endpoints: {
+      health: '/health',
+      bookings: '/api/bookings',
+      bookingsByDate: '/api/bookings/:date'
+    },
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -131,13 +149,15 @@ async function startServer() {
     await fileDB.init();
     
     // Start Express server
-    app.listen(PORT, () => {
+    // Listen on 0.0.0.0 to accept connections from Railway
+    const HOST = process.env.HOST || '0.0.0.0';
+    app.listen(PORT, HOST, () => {
       console.log('=================================');
       console.log('🚀 VJK Mahal API Server Started');
       console.log('=================================');
-      console.log(`📍 Server URL: http://localhost:${PORT}`);
-      console.log(`📍 Health Check: http://localhost:${PORT}/health`);
-      console.log(`📍 API Endpoint: http://localhost:${PORT}/api/bookings`);
+      console.log(`📍 Server listening on ${HOST}:${PORT}`);
+      console.log(`📍 Health Check: http://${HOST}:${PORT}/health`);
+      console.log(`📍 API Endpoint: http://${HOST}:${PORT}/api/bookings`);
       console.log(`🌐 Frontend URL: ${FRONTEND_URL}`);
       console.log(`🌐 Allowed Origins: ${allowedOrigins.join(', ')}`);
       console.log(`💾 Database: File-based (JSON)`);
