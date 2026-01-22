@@ -80,15 +80,12 @@ const getApiUrl = () => {
     return null;
   }
   
-  // Warn if pointing to Vercel domain (should point to Railway)
-  if (cleanUrl.includes('vercel.app') || cleanUrl.includes('vjs-gamma')) {
-    console.error('❌ VITE_API_URL is pointing to Vercel domain!');
-    console.error('❌ It should point to your Railway backend URL');
-    console.error('❌ Example: https://your-app.up.railway.app/api');
-    console.error('❌ Current value:', cleanUrl);
-    if (isProduction) {
-      return null; // Don't allow Vercel domain in production
-    }
+  // If pointing to Vercel domain, fall back to Railway backend
+  if (isProduction && (cleanUrl.includes('vercel.app') || cleanUrl.includes('vjs-gamma'))) {
+    console.warn('⚠️ VITE_API_URL is pointing to Vercel domain!');
+    console.warn('⚠️ Falling back to Railway backend:', PRODUCTION_API_URL);
+    console.warn('💡 Update VITE_API_URL in Vercel to: https://vjs-production.up.railway.app/api');
+    return PRODUCTION_API_URL; // Use Railway backend instead
   }
   
   console.log('✅ API URL configured:', cleanUrl);
